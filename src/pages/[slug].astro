@@ -1,0 +1,100 @@
+---
+import Base from '../layouts/Base.astro';
+import { defects, relatedFor } from '../data/defects';
+
+export function getStaticPaths() {
+  return defects.map((d) => ({ params: { slug: d.slug }, props: { defect: d } }));
+}
+
+const { defect } = Astro.props;
+const related = relatedFor(defect.slug);
+const canonical = new URL(Astro.url.pathname, Astro.site);
+
+const rankLabel = {
+  first: 'Try this first',
+  common: 'Common cause',
+  less: 'Less common',
+} as const;
+
+const schema: object[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: `How to fix ${defect.h1.toLowerCase()} in 3D printing`,
+    description: defect.description,
+    url: canonical.toString(),
+    totalTime: 'PT30M',
+    step: defect.fixes.map((f, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: f.title,
+      text: f.why,
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: defect.faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+];
+---
+
+<Base title={defect.metaTitle} description={defect.description} schema={schema}>
+  <h1>{defect.h1}</h1>
+  <p class="subtitle">{defect.intro}</p>
+
+  <div class="note">
+    <strong>Looks like:</strong> {defect.looksLike}
+  </div>
+
+  <h2>Fixes, in the order worth trying</h2>
+
+  {defect.fixes.map((fix, i) => (
+    <div class:list={['fix', fix.rank === 'first' && 'likely', 'step']}>
+      <span class="rank">{i + 1} · {rankLabel[fix.rank]}</span>
+      <h3>{fix.title}</h3>
+      <p class="why">{fix.why}</p>
+      {fix.action && <p class="why">{fix.action}</p>}
+      {fix.settings && fix.settings.length > 0 && (
+        <dl class="setting">
+          {fix.settings.map((s) => (
+            <>
+              <dt>{s.name}</dt>
+              <dd>{s.where} → <strong>{s.try}</strong></dd>
+            </>
+          ))}
+        </dl>
+      )}
+    </div>
+  ))}
+
+  <div class="note warn">
+    <strong>Change one thing at a time.</strong> If you adjust temperature, retraction and
+    speed together and the problem goes away, you have learned nothing and you will be back
+    here next month. Re-print the same test object after each single change.
+  </div>
+
+  <section class="faq">
+    <h2>Frequently asked questions</h2>
+    {defect.faqs.map((f) => (
+      <details>
+        <summary>{f.q}</summary>
+        <p>{f.a}</p>
+      </details>
+    ))}
+  </section>
+
+  <aside class="related">
+    <h2>Other print problems</h2>
+    <ul>
+      {related.map((r) => (
+        <li><a href={r.href}>{r.label}</a></li>
+      ))}
+      <li><a href="/filament-settings/">Filament settings reference</a></li>
+    </ul>
+  </aside>
+</Base>

@@ -1,0 +1,197 @@
+---
+import Base from '../layouts/Base.astro';
+import { relatedFor } from '../data/defects';
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const related = relatedFor('stringing', 5);
+
+// Ranges are the consensus working window across mainstream brands for a
+// 0.4 mm nozzle. Always start from the number on your spool label — these
+// are for when the label is missing, vague, or clearly wrong.
+const materials = [
+  {
+    name: 'PLA',
+    nozzle: '190–220 °C',
+    bed: '55–65 °C',
+    fan: '100 %',
+    speed: '50–150 mm/s',
+    retractDD: '0.5–1.5 mm',
+    retractBow: '4–6 mm',
+    dry: '45–55 °C · 4–6 h',
+    note: 'Easiest to print. If it strings, drop temperature before touching retraction. Does not need an enclosure — and in a hot enclosure it suffers heat creep.',
+  },
+  {
+    name: 'PETG',
+    nozzle: '230–250 °C',
+    bed: '70–85 °C',
+    fan: '30–50 %',
+    speed: '40–80 mm/s',
+    retractDD: '1–2 mm',
+    retractBow: '4–7 mm',
+    dry: '60–65 °C · 6–8 h',
+    note: 'Absorbs moisture within days — dry it first, always. Sticks so well to smooth PEI it can tear the sheet; use a glue-stick release layer. Expect some stringing even when tuned.',
+  },
+  {
+    name: 'ABS',
+    nozzle: '230–260 °C',
+    bed: '95–110 °C',
+    fan: '0–20 %',
+    speed: '40–70 mm/s',
+    retractDD: '0.5–1.5 mm',
+    retractBow: '4–6 mm',
+    dry: '60–65 °C · 4–6 h',
+    note: 'Enclosure is not optional. Warps roughly three times as much as PLA and cracks part-way up without a warm chamber. Ventilate — the fumes are unpleasant and worth extracting.',
+  },
+  {
+    name: 'ASA',
+    nozzle: '240–265 °C',
+    bed: '95–110 °C',
+    fan: '0–20 %',
+    speed: '40–70 mm/s',
+    retractDD: '0.5–1.5 mm',
+    retractBow: '4–6 mm',
+    dry: '60–65 °C · 4–6 h',
+    note: 'Behaves like ABS but survives UV, so it is the right choice for outdoor parts. Same enclosure and ventilation requirements.',
+  },
+  {
+    name: 'TPU (95A)',
+    nozzle: '215–235 °C',
+    bed: '40–60 °C',
+    fan: '30–60 %',
+    speed: '15–30 mm/s',
+    retractDD: '0–1 mm',
+    retractBow: 'not recommended',
+    dry: '50–55 °C · 4–6 h',
+    note: 'Slow is the whole trick. Flexible filament buckles instead of retracting, so keep retraction near zero and prefer direct drive — a long Bowden tube makes it barely printable.',
+  },
+  {
+    name: 'Nylon (PA)',
+    nozzle: '240–270 °C',
+    bed: '70–90 °C',
+    fan: '0–30 %',
+    speed: '30–60 mm/s',
+    retractDD: '1–2 mm',
+    retractBow: '4–6 mm',
+    dry: '70–80 °C · 8–12 h',
+    note: 'The most moisture-hungry common filament — it can absorb enough in a single humid day to ruin a print. Print directly from a heated dry box, not from a dried-once spool.',
+  },
+  {
+    name: 'PC',
+    nozzle: '260–300 °C',
+    bed: '100–120 °C',
+    fan: '0–20 %',
+    speed: '30–50 mm/s',
+    retractDD: '1–2 mm',
+    retractBow: '4–6 mm',
+    dry: '80–90 °C · 8–12 h',
+    note: 'Needs an all-metal hotend and a genuinely hot chamber. Layer separation is the usual failure — treat cooling as the enemy and temperature as the fix.',
+  },
+];
+
+const faqs = [
+  {
+    q: 'Why does my spool label disagree with these ranges?',
+    a: 'Follow the label first. These are consensus windows across brands, but individual formulations genuinely differ — high-speed PLA runs 15–25 °C hotter than standard PLA, and silk PLA behaves differently again. Use these when the label is missing or the label value clearly is not working.',
+  },
+  {
+    q: 'What is a temperature tower and should I print one?',
+    a: 'A test model that changes nozzle temperature every few millimetres so you can compare the same geometry across a range in one print. It is the fastest way to find the right temperature for a specific spool, and worth doing once per new filament brand. Most slicers ship one, or generate it with a Calibration menu.',
+  },
+  {
+    q: 'How do I know if my filament is wet?',
+    a: 'Listen and look. Popping or hissing from the nozzle, steam, sudden stringing on a filament that used to print clean, and rough or bubbly extrusion all point to moisture. A quick test: extrude 100 mm in mid-air and look for bubbles or an uneven surface on the strand.',
+  },
+  {
+    q: 'Do I need to change retraction when I change material?',
+    a: 'Yes. PETG needs more retraction than PLA at the same hardware, and TPU needs almost none. Retraction belongs in the filament profile rather than the printer profile, which is where OrcaSlicer and PrusaSlicer put it by default.',
+  },
+];
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  },
+];
+---
+
+<Base
+  title="Filament Settings Chart — Temp, Bed, Cooling, Retraction"
+  description="Starting temperatures, bed temps, cooling, speed, retraction and drying times for PLA, PETG, ABS, ASA, TPU, nylon and PC. One table, no sign-up."
+  schema={schema}
+>
+  <h1>Filament settings reference</h1>
+  <p class="subtitle">
+    Starting points for a 0.4 mm nozzle. Start from your spool label when it has one — these
+    are the working windows for when it does not, or when the label value is clearly wrong.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Nozzle</th>
+          <th>Bed</th>
+          <th>Fan</th>
+          <th>Speed</th>
+          <th>Retract (DD)</th>
+          <th>Retract (Bowden)</th>
+          <th>Drying</th>
+        </tr>
+      </thead>
+      <tbody>
+        {materials.map((m) => (
+          <tr>
+            <td><strong>{m.name}</strong></td>
+            <td class="num">{m.nozzle}</td>
+            <td class="num">{m.bed}</td>
+            <td class="num">{m.fan}</td>
+            <td class="num">{m.speed}</td>
+            <td class="num">{m.retractDD}</td>
+            <td class="num">{m.retractBow}</td>
+            <td class="num">{m.dry}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2>What to know about each</h2>
+  {materials.map((m) => (
+    <div class="fix">
+      <h3>{m.name}</h3>
+      <p class="why">{m.note}</p>
+    </div>
+  ))}
+
+  <div class="note warn">
+    <strong>Drying is not optional for half of this table.</strong> PETG, nylon and PC absorb
+    enough moisture from ordinary room air to ruin prints within days. If a filament that used
+    to print cleanly suddenly strings, pops or delaminates, dry it before changing a single setting.
+  </div>
+
+  <section class="faq">
+    <h2>Frequently asked questions</h2>
+    {faqs.map((f) => (
+      <details>
+        <summary>{f.q}</summary>
+        <p>{f.a}</p>
+      </details>
+    ))}
+  </section>
+
+  <aside class="related">
+    <h2>Print problems</h2>
+    <ul>
+      {related.map((r) => (
+        <li><a href={r.href}>{r.label}</a></li>
+      ))}
+    </ul>
+  </aside>
+</Base>

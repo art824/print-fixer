@@ -1,0 +1,199 @@
+---
+import Base from '../layouts/Base.astro';
+import { defects } from '../data/defects';
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+
+// Serialised for the client-side picker. Only what the widget needs.
+const picker = defects.map((d) => ({
+  slug: d.slug,
+  short: d.short,
+  looksLike: d.looksLike,
+  fixes: d.fixes.slice(0, 3).map((f) => ({
+    title: f.title,
+    why: f.why,
+    rank: f.rank,
+    settings: f.settings ?? [],
+    action: f.action ?? '',
+  })),
+}));
+
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'PrintFixer print quality diagnostic',
+    url: canonical.toString(),
+    description:
+      'Pick the symptom your 3D print has and get the causes ranked by likelihood, with the exact slicer setting to change in Cura, OrcaSlicer and PrusaSlicer.',
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'Any',
+    browserRequirements: 'Requires JavaScript',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  },
+];
+---
+
+<Base
+  title="PrintFixer — Diagnose 3D Print Quality Problems by Symptom"
+  description="Pick the symptom your 3D print has and get the causes ranked by likelihood, each with the exact slicer setting to change. Free, no sign-up."
+  schema={schema}
+>
+  <div class="hero">
+    <h1>What does your print look like?</h1>
+    <p class="subtitle">
+      Pick a symptom. You get the causes ordered by what actually fixes it most often — and
+      the exact setting to change, with the menu path for your slicer. No forum thread
+      archaeology, no sign-up.
+    </p>
+  </div>
+
+  <div class="tool">
+    <fieldset>
+      <legend>1 · Symptom</legend>
+      <div class="symptoms" id="symptoms">
+        {picker.map((d) => (
+          <button type="button" class="symptom" data-slug={d.slug} aria-pressed="false">
+            {d.short}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset id="ctx-wrap" hidden>
+      <legend>2 · Your setup <span style="text-transform:none;letter-spacing:0;color:var(--text-faint);font-weight:400">— optional, sharpens the advice</span></legend>
+      <div class="field">
+        <label for="extruder">Extruder type</label>
+        <select id="extruder">
+          <option value="dd">Direct drive (extruder on the toolhead)</option>
+          <option value="bowden">Bowden (extruder on the frame)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="material">Material</label>
+        <select id="material">
+          <option value="pla">PLA</option>
+          <option value="petg">PETG</option>
+          <option value="abs">ABS / ASA</option>
+          <option value="tpu">TPU</option>
+          <option value="nylon">Nylon / PC</option>
+        </select>
+      </div>
+    </fieldset>
+
+    <div class="results" id="results" aria-live="polite"></div>
+  </div>
+
+  <h2>Every problem, in detail</h2>
+  <div class="card-grid">
+    {defects.map((d) => (
+      <a class="card" href={`/${d.slug}/`}>
+        <span class="sym">{d.short}</span>
+        <h2>{d.looksLike}</h2>
+      </a>
+    ))}
+    <a class="card" href="/filament-settings/">
+      <span class="sym">Reference</span>
+      <h2>Starting temperatures, bed, cooling and retraction for every common filament.</h2>
+    </a>
+  </div>
+
+  <h2>Why this exists</h2>
+  <p>
+    Search any print defect and you get forum threads where twelve people guess, a video
+    that takes nine minutes to say "dry your filament", and a manufacturer's blog post that
+    recommends the manufacturer's filament. All of it stops at advice like "reduce your
+    retraction" — which is not actionable, because the setting is called something different
+    in every slicer and the right value depends on whether your extruder is direct drive.
+  </p>
+  <p>
+    So every fix here names the setting, the menu path, and a starting value. And they are
+    ordered by what actually resolves the problem most often, not by what is easiest to
+    write about. Moisture is listed before retraction on the stringing page because moisture
+    is more often the real cause, even though every thread starts with retraction.
+  </p>
+
+  <script define:vars={{ picker }}>
+    const rankLabel = { first: 'Try this first', common: 'Common cause', less: 'Less common' };
+    const bySlug = Object.fromEntries(picker.map((d) => [d.slug, d]));
+    const results = document.getElementById('results');
+    const ctxWrap = document.getElementById('ctx-wrap');
+    const extruder = document.getElementById('extruder');
+    const material = document.getElementById('material');
+    let active = null;
+
+    // Context notes are additive: they never contradict the ranked fixes, they
+    // just tell you which way to lean for your specific setup.
+    function contextNote(slug) {
+      const e = extruder.value;
+      const m = material.value;
+      const notes = [];
+      if (slug === 'stringing' || slug === 'clogged-nozzle' || slug === 'blobs-and-zits') {
+        notes.push(
+          e === 'bowden'
+            ? 'Bowden setup: retraction in the 4–7 mm range is normal. Long PTFE runs need more, not less.'
+            : 'Direct drive: keep retraction under about 1.5 mm. Bowden-sized values cause clogs and blobs here.'
+        );
+      }
+      if (m === 'petg') notes.push('PETG absorbs moisture within days and is stickier when molten — dry it before changing any setting, and expect more ooze than PLA at the same tuning.');
+      if (m === 'abs') notes.push('ABS/ASA: run cooling near zero and use an enclosure. Most "ABS problems" are really draft and cooling problems.');
+      if (m === 'tpu') notes.push('TPU: print slow (15–30 mm/s) and use minimal retraction — flexible filament buckles in the extruder rather than retracting cleanly.');
+      if (m === 'nylon') notes.push('Nylon/PC absorb moisture extremely fast. Print straight from a heated dry box; drying once and leaving the spool out will not hold.');
+      return notes;
+    }
+
+    function render() {
+      if (!active) { results.innerHTML = ''; return; }
+      const d = bySlug[active];
+      const notes = contextNote(active);
+      let html = `<p class="why" style="color:var(--text-dim);margin-bottom:.8rem">
+        <strong>${escapeHtml(d.looksLike)}</strong></p>`;
+
+      notes.forEach((n) => {
+        html += `<div class="note">${escapeHtml(n)}</div>`;
+      });
+
+      d.fixes.forEach((f, i) => {
+        html += `<div class="fix step${f.rank === 'first' ? ' likely' : ''}">
+          <span class="rank">${i + 1} · ${rankLabel[f.rank]}</span>
+          <h3>${escapeHtml(f.title)}</h3>
+          <p class="why">${escapeHtml(f.why)}</p>`;
+        if (f.action) html += `<p class="why">${escapeHtml(f.action)}</p>`;
+        if (f.settings.length) {
+          html += '<dl class="setting">';
+          f.settings.forEach((s) => {
+            html += `<dt>${escapeHtml(s.name)}</dt><dd>${escapeHtml(s.where)} → <strong>${escapeHtml(s.try)}</strong></dd>`;
+          });
+          html += '</dl>';
+        }
+        html += '</div>';
+      });
+
+      html += `<div class="btn-row">
+        <a class="btn" href="/${d.slug}/">All fixes for ${escapeHtml(d.short.toLowerCase())} →</a>
+      </div>`;
+      results.innerHTML = html;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+      ));
+    }
+
+    document.getElementById('symptoms').addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.symptom');
+      if (!btn) return;
+      const slug = btn.dataset.slug;
+      active = active === slug ? null : slug;
+      document.querySelectorAll('.symptom').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.slug === active));
+      });
+      ctxWrap.hidden = !active;
+      render();
+    });
+
+    extruder.addEventListener('change', render);
+    material.addEventListener('change', render);
+  </script>
+</Base>

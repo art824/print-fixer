@@ -1,0 +1,75 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  schema?: object[];
+}
+
+const { title, description, schema = [] } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+
+const favicon =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1b1e24"/><path d="M8 22h16M8 18.5h16M8 15h16" stroke="#7ee787" stroke-width="2.2" stroke-linecap="round"/><path d="M16 4v7M13 8.5l3 3 3-3" stroke="#7ee787" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  );
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={favicon} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="theme-color" content="#14161a" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="generator" content={Astro.generator} />
+    {schema.map((s) => <script type="application/ld+json" set:html={JSON.stringify(s)} />)}
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="inner">
+        <a class="brand" href="/" aria-label="PrintFixer home">
+          <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="7" fill="#272c34" />
+            <path d="M8 22h16M8 18.5h16M8 15h16" stroke="#7ee787" stroke-width="2.2" stroke-linecap="round" />
+            <path d="M16 4v7M13 8.5l3 3 3-3" stroke="#7ee787" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>
+            <span class="word">print<em>fixer</em></span>
+            <span class="tag">what went wrong, and the exact setting to change</span>
+          </span>
+        </a>
+        <nav>
+          <a href="/">Diagnose</a>
+          <a href="/filament-settings/">Settings</a>
+        </nav>
+      </div>
+    </header>
+    <div class="layerlines" aria-hidden="true"></div>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="inner">
+        <p>
+          <strong>PrintFixer</strong> — free FDM print-quality troubleshooting. Everything runs
+          in your browser: nothing you type is sent, stored, or shared.
+        </p>
+        <p>
+          Settings are starting points, not guarantees. Every printer, filament spool and
+          ambient temperature is different — change one variable at a time and re-test.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
