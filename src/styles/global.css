@@ -95,15 +95,33 @@ select:focus, input:focus { outline: 3px solid rgb(126 231 135 / .22); border-co
 .btn.secondary:hover { color: var(--green); border-color: var(--green-dim); }
 .btn-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem; }
 
-/* symptom picker */
-.symptoms { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: .5rem; }
+/* ---------- defect line-art ---------- */
+/* Drawn, not photographed. The user is standing at the printer holding a failed
+   part and does not know the word "elephant foot" — they know what it looks like. */
+.defect-art { display: block; }
+.defect-art .ok   { stroke: var(--text-faint); stroke-width: 2; }
+.defect-art .bed  { stroke: var(--line); stroke-width: 2; }
+.defect-art .bad  { stroke: var(--amber); stroke-width: 2.2; }
+.defect-art circle.bad, .defect-art rect.bad { fill: rgb(255 204 102 / .18); }
+.symptom[aria-pressed="true"] .defect-art .bad { stroke: var(--green); }
+.symptom[aria-pressed="true"] .defect-art circle.bad,
+.symptom[aria-pressed="true"] .defect-art rect.bad { fill: rgb(126 231 135 / .2); }
+
+/* symptom picker — visual first, label second */
+.symptoms { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: .5rem; }
 .symptom {
-  display: block; text-align: left; font: inherit; font-size: .88rem; font-weight: 550;
-  padding: .6rem .7rem; border: 1.5px solid var(--line); border-radius: 9px;
-  background: var(--bg-2); color: var(--text-dim); cursor: pointer; line-height: 1.35;
+  display: flex; flex-direction: column; align-items: center; gap: .35rem;
+  text-align: center; font: inherit; font-size: .78rem; font-weight: 550; line-height: 1.25;
+  padding: .6rem .4rem .55rem; border: 1.5px solid var(--line); border-radius: 10px;
+  background: var(--bg-2); color: var(--text-dim); cursor: pointer;
 }
 .symptom:hover { border-color: var(--green-dim); color: var(--text); }
 .symptom[aria-pressed="true"] { border-color: var(--green); background: rgb(126 231 135 / .1); color: var(--green); }
+
+/* art beside the H1 on a defect page */
+.defect-head { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0 .5rem; }
+.defect-head h1 { margin: 0; }
+.defect-head .defect-art { flex: 0 0 auto; }
 
 /* ---------- results / fix list ---------- */
 .results { margin-top: 1.1rem; border-top: 1px solid var(--line); padding-top: 1rem; }
@@ -168,6 +186,8 @@ td.num { font-family: var(--mono); color: var(--blue); white-space: nowrap; }
   border-radius: var(--radius); padding: .95rem 1rem; text-decoration: none; color: inherit;
 }
 .card:hover { border-color: var(--green-dim); background: var(--panel-2); }
+.card-art { display: flex; gap: .8rem; align-items: flex-start; }
+.card-art .defect-art { flex: 0 0 auto; margin-top: .1rem; }
 .card h2 { margin: 0 0 .2rem; font-size: 1rem; font-weight: 650; color: #fff; }
 .card p { margin: 0; color: var(--text-dim); font-size: .85rem; line-height: 1.45; }
 .card .sym { font-family: var(--mono); font-size: .68rem; color: var(--green); letter-spacing: .07em; text-transform: uppercase; display: block; margin-bottom: .3rem; }
@@ -185,10 +205,17 @@ td.num { font-family: var(--mono); color: var(--blue); white-space: nowrap; }
 .site-footer p { margin: .4rem 0; }
 
 @media (max-width: 480px) {
-  .hero h1 { font-size: 1.6rem; }
-  h1 { font-size: 1.5rem; }
+  /* Crisis mode: they are standing at the printer holding a failed part.
+     Get the picker onto the first screen — every pixel of preamble costs. */
+  .hero { margin: .9rem 0 .3rem; }
+  .hero h1 { font-size: 1.5rem; }
+  .hero .subtitle { font-size: .93rem; margin-bottom: .8rem; }
+  h1 { font-size: 1.45rem; }
+  .tool { padding: .8rem; }
   .brand .tag { display: none; }
-  .symptoms { grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); }
+  .symptoms { grid-template-columns: repeat(auto-fill, minmax(6.6rem, 1fr)); gap: .4rem; }
+  .symptom { font-size: .72rem; padding: .45rem .3rem .4rem; }
+  .defect-head { gap: .7rem; margin-top: 1.1rem; }
   .setting { grid-template-columns: 1fr; gap: .1rem .5rem; }
   .setting dt { margin-top: .3rem; }
 }

@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import DefectArt from '../components/DefectArt.astro';
 import { defects } from '../data/defects';
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -42,18 +43,18 @@ const schema = [
   <div class="hero">
     <h1>What does your print look like?</h1>
     <p class="subtitle">
-      Pick a symptom. You get the causes ordered by what actually fixes it most often — and
-      the exact setting to change, with the menu path for your slicer. No forum thread
-      archaeology, no sign-up.
+      Tap the picture that matches. You get the causes in the order that actually fixes
+      them — with the exact setting to change and where to find it in your slicer.
     </p>
   </div>
 
   <div class="tool">
     <fieldset>
-      <legend>1 · Symptom</legend>
+      <legend>1 · Find your symptom</legend>
       <div class="symptoms" id="symptoms">
         {picker.map((d) => (
-          <button type="button" class="symptom" data-slug={d.slug} aria-pressed="false">
+          <button type="button" class="symptom" data-slug={d.slug} aria-pressed="false" title={d.looksLike}>
+            <DefectArt slug={d.slug} size={62} />
             {d.short}
           </button>
         ))}
@@ -87,9 +88,12 @@ const schema = [
   <h2>Every problem, in detail</h2>
   <div class="card-grid">
     {defects.map((d) => (
-      <a class="card" href={`/${d.slug}/`}>
-        <span class="sym">{d.short}</span>
-        <h2>{d.looksLike}</h2>
+      <a class="card card-art" href={`/${d.slug}/`}>
+        <DefectArt slug={d.slug} size={56} />
+        <div>
+          <span class="sym">{d.short}</span>
+          <h2>{d.looksLike}</h2>
+        </div>
       </a>
     ))}
     <a class="card" href="/filament-settings/">

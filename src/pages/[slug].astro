@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import DefectArt from '../components/DefectArt.astro';
 import { defects, relatedFor } from '../data/defects';
 
 export function getStaticPaths() {
@@ -44,7 +45,10 @@ const schema: object[] = [
 ---
 
 <Base title={defect.metaTitle} description={defect.description} schema={schema}>
-  <h1>{defect.h1}</h1>
+  <div class="defect-head">
+    <DefectArt slug={defect.slug} size={84} />
+    <h1>{defect.h1}</h1>
+  </div>
   <p class="subtitle">{defect.intro}</p>
 
   <div class="note">
