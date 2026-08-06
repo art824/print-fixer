@@ -1,4 +1,4 @@
-# print-fixer — printfixer.com
+# print-fixer — printdefect.com
 
 Diagnóstico de defeito de impressão 3D (FDM). Você escolhe o sintoma e recebe as causas
 ranqueadas por probabilidade real, cada uma com **o nome exato do parâmetro e o caminho
@@ -68,7 +68,7 @@ Falhou qualquer um ⇒ o nicho morre; reaproveitar o template. Mesma régua dos 
 
 - **Zero links entre este site e os outros dois do Arthur.**
 - Identidade visual distinta: haul-calc = asfalto escuro/âmbar · cutfillcalc = blueprint
-  claro · **printfixer = oficina escura, verde de filamento, motivo de camadas**.
+  claro · **printdefect = oficina escura, verde de filamento, motivo de camadas**.
 - Search Console e analytics separados.
 
 ## Stack
